@@ -168,7 +168,7 @@ public class PBXProjGenerator {
                 let platformGroup: ObjectReference<PBXGroup> = createObject(
                     id: "Carthage" + platform,
                     PBXGroup(
-                        children: fileReferences.sorted(),
+                        children: fileReferences.sorted { $0.localizedStandardCompare($1) == .orderedAscending },
                         sourceTree: .group,
                         path: platform
                     )
@@ -179,7 +179,7 @@ public class PBXProjGenerator {
             let carthageGroup = createObject(
                 id: "Carthage",
                 PBXGroup(
-                    children: platformReferences.sorted(),
+                    children: platformReferences.sorted { $0.localizedStandardCompare($1) == .orderedAscending },
                     sourceTree: .group,
                     name: "Carthage",
                     path: carthageBuildPath
@@ -211,8 +211,8 @@ public class PBXProjGenerator {
             .merged(project.attributes)
             .merged(generateTargetAttributes() ?? [:])
 
-        pbxProject.object.knownRegions = sourceGenerator.knownRegions.sorted()
-        pbxProject.object.targets = targetObjects.values.sorted { $0.object.name < $1.object.name }.map { $0.reference }
+        pbxProject.object.knownRegions = sourceGenerator.knownRegions.sorted  { $0.localizedStandardCompare($1) == .orderedAscending }
+        pbxProject.object.targets = targetObjects.values.sorted { $0.object.name.localizedStandardCompare($1.object.name) == .orderedAscending }.map { $0.reference }
         pbxProject.object.attributes = projectAttributes
 
         return pbxProj
@@ -537,7 +537,7 @@ public class PBXProjGenerator {
                         output.append(sourceFile)
                     }
                 }
-                .sorted { $0.path.lastComponent < $1.path.lastComponent }
+                .sorted { $0.path.lastComponent.localizedStandardCompare($1.path.lastComponent) == .orderedAscending }
             return files.map { createObject(id: $0.fileReference + target.name, $0.buildFile) }
                 .map { $0.reference }
         }
@@ -640,7 +640,7 @@ public class PBXProjGenerator {
                 .filter { $0.embed ?? target.shouldEmbedDependencies }
                 .map { $0.reference }
         ))
-            .sorted()
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
 
         if !carthageFrameworksToEmbed.isEmpty && target.platform != .macOS {
 
@@ -789,7 +789,7 @@ public class PBXProjGenerator {
             visitedTargets.update(with: target.name)
         }
 
-        return dependencies.sorted(by: { $0.key < $1.key }).map { $0.value }
+        return dependencies.sorted(by: { $0.key.localizedStandardCompare($1.key) == .orderedAscending }).map { $0.value }
     }
 }
 
